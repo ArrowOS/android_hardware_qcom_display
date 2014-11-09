@@ -1,4 +1,6 @@
 ifneq ($(TARGET_DISABLE_DISPLAY),true)
+ifeq ($(call my-dir),$(call project-path-for,qcom-display))
+
 sdm-libs := sdm/libs
 display-hals := include libdebug $(sdm-libs)/utils $(sdm-libs)/core
 
@@ -19,3 +21,5 @@ endif
 endif
 endif
 endif #TARGET_DISABLE_DISPLAY
+
+endif
