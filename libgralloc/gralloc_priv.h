@@ -55,7 +55,7 @@
 
 /* Set this for allocating uncached memory (using O_DSYNC),
  * cannot be used with noncontiguous heaps */
-#define GRALLOC_USAGE_PRIVATE_UNCACHED        0x02000000
+#define GRALLOC_USAGE_PRIVATE_UNCACHED        0x00000004
 
 /* Buffer content should be displayed on an primary display only */
 #define GRALLOC_USAGE_PRIVATE_INTERNAL_ONLY   0x04000000
