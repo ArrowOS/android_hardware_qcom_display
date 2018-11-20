@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "software_converter.h"
+#include <cstring>
 
 /** Convert YV12 to YCrCb_420_SP */
 int convertYV12toYCrCb420SP(const copybit_image_t *src, private_handle_t *yv12_handle)
