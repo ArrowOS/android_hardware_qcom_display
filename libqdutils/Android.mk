@@ -30,6 +30,7 @@ LOCAL_CFLAGS                    := $(common_flags)
 LOCAL_CFLAGS                    += -DLOG_TAG=\"DisplayConfig\"
 LOCAL_MODULE_TAGS               := optional
 LOCAL_MODULE                    := libdisplayconfig
+LOCAL_VENDOR_MODULE             := true
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
