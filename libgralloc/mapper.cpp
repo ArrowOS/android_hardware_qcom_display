@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 
-#include <cutils/log.h>
+#include <log/log.h>
 #include <cutils/atomic.h>
 #include <utils/Trace.h>
 

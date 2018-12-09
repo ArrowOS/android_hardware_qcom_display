@@ -30,7 +30,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <cutils/log.h>
+#include <log/log.h>
 #include <gralloc_priv.h>
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
