@@ -24,7 +24,7 @@ LOCAL_SHARED_LIBRARIES        := $(common_libs) libEGL liboverlay \
                                  libbfqio
 
 LOCAL_CFLAGS                  := $(common_flags) -DLOG_TAG=\"qdhwcomposer\" -Wno-absolute-value \
-                                 -Wno-float-conversion -Wno-unused-parameter
+                                 -Wno-float-conversion -Wno-unused-parameter -Wno-implicit-fallthrough
 
 ifeq ($(TARGET_USES_QCOM_BSP),true)
 LOCAL_SHARED_LIBRARIES += libhwui
