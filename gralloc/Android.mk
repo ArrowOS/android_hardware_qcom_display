@@ -82,7 +82,6 @@ LOCAL_C_INCLUDES              := $(common_includes) $(kernel_includes)
 LOCAL_HEADER_LIBRARIES        := display_headers
 LOCAL_SHARED_LIBRARIES        := $(common_libs) \
                                   libhidlbase \
-                                  libhidltransport \
                                   libqdMetaData \
                                   libgrallocutils \
                                   libgralloccore \
@@ -102,7 +101,6 @@ LOCAL_MODULE_TAGS             := optional
 LOCAL_HEADER_LIBRARIES        := display_headers
 LOCAL_SHARED_LIBRARIES        := $(common_libs) \
                                  libhidlbase \
-                                 libhidltransport\
                                  libqdMetaData \
                                  libgrallocutils \
                                  libgralloccore \
