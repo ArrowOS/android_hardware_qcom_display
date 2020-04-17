@@ -1086,11 +1086,12 @@ DisplayError HWCDisplay::HandleEvent(DisplayEvent event) {
       break;
     }
     case kThermalEvent:
-    case kIdlePowerCollapse:
     case kPanelDeadEvent: {
       SEQUENCE_WAIT_SCOPE_LOCK(HWCSession::locker_[type_]);
       validated_ = false;
     } break;
+    case kIdlePowerCollapse:
+      break;
     default:
       DLOGW("Unknown event: %d", event);
       break;
