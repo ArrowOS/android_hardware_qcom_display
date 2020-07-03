@@ -332,7 +332,7 @@ DisplayError DisplayBuiltIn::SetDisplayMode(uint32_t mode) {
     HWDisplayMode hw_display_mode = static_cast<HWDisplayMode>(mode);
     uint32_t pending = 0;
 
-    if (!active_) {
+    if (!active_ && !pending_doze_ && !pending_power_on_) {
       DLOGW("Invalid display state = %d. Panel must be on.", state_);
       return kErrorNotSupported;
     }
@@ -464,6 +464,12 @@ DisplayError DisplayBuiltIn::SetRefreshRate(uint32_t refresh_rate, bool final_ra
       // Just drop min fps settting for now.
       handle_idle_timeout_ = false;
       return error;
+    }
+
+    if (handle_idle_timeout_) {
+      is_idle_timeout_ = true;
+    } else {
+      is_idle_timeout_ = false;
     }
 
     error = comp_manager_->CheckEnforceSplit(display_comp_ctx_, refresh_rate);
@@ -999,6 +1005,25 @@ void DisplayBuiltIn::GetFpsConfig(HWDisplayAttributes *display_attr, HWPanelInfo
   display_attr->fps = display_attributes_.fps;
   display_attr->vsync_period_ns = display_attributes_.vsync_period_ns;
   panel_info->transfer_time_us = hw_panel_info_.transfer_time_us;
+}
+
+DisplayError DisplayBuiltIn::GetConfig(DisplayConfigFixedInfo *fixed_info) {
+  lock_guard<recursive_mutex> obj(recursive_mutex_);
+  fixed_info->is_cmdmode = (hw_panel_info_.mode == kModeCommand);
+
+  HWResourceInfo hw_resource_info = HWResourceInfo();
+  hw_info_intf_->GetHWResourceInfo(&hw_resource_info);
+
+  fixed_info->hdr_supported = hw_resource_info.has_hdr;
+  // Populate luminance values only if hdr will be supported on that display
+  fixed_info->max_luminance = fixed_info->hdr_supported ? hw_panel_info_.peak_luminance: 0;
+  fixed_info->average_luminance = fixed_info->hdr_supported ? hw_panel_info_.average_luminance : 0;
+  fixed_info->min_luminance = fixed_info->hdr_supported ?  hw_panel_info_.blackness_level: 0;
+  fixed_info->hdr_eotf = hw_panel_info_.hdr_eotf;
+  fixed_info->hdr_metadata_type_one = hw_panel_info_.hdr_metadata_type_one;
+  fixed_info->partial_update = hw_panel_info_.partial_update;
+
+  return kErrorNone;
 }
 
 }  // namespace sdm
