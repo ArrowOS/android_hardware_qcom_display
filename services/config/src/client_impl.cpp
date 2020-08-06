@@ -47,11 +47,23 @@ int ClientImpl::Init(std::string client_name, ConfigCallback *callback) {
     handle = client_handle;
   };
   int pid = getpid();
-  display_config_->registerClient(client_name + std::to_string(pid), this, hidl_callback);
+  android::sp<ClientCallback> client_cb(new ClientCallback(callback));
+  display_config_->registerClient(client_name + std::to_string(pid), client_cb,
+                                  hidl_callback);
   client_handle_ = handle;
-  callback_ = callback;
 
   return 0;
+}
+
+void ClientImpl::DeInit() {
+  int32_t error = 0;
+  auto hidl_cb = [&error] (int32_t err, ByteStream params, HandleStream handles) {
+    error = err;
+  };
+
+  display_config_->perform(client_handle_, kDestroy, {}, {}, hidl_cb);
+  display_config_.clear();
+  display_config_ = nullptr;
 }
 
 int ClientImpl::IsDisplayConnected(DisplayType dpy, bool *connected) {
@@ -623,10 +635,6 @@ int ClientImpl::IsBuiltInDisplay(uint32_t disp_id, bool *is_builtin) {
 
 int ClientImpl::SetCWBOutputBuffer(uint32_t disp_id, const Rect rect, bool post_processed,
                                    const native_handle_t *buffer) {
-  if (callback_ == nullptr) {
-    return -EINVAL;
-  }
-
   struct CwbBufferParams input = {disp_id, rect, post_processed};
   ByteStream input_params;
   input_params.setToExternal(reinterpret_cast<uint8_t*>(&input), sizeof(struct CwbBufferParams));
@@ -820,11 +828,48 @@ int ClientImpl::ControlQsyncCallback(bool enable) {
   return error;
 }
 
-void ClientImpl::ParseNotifyCWBBufferDone(const ByteStream &input_params,
-                                          const HandleStream &input_handles) {
+int ClientImpl::SendTUIEvent(DisplayType dpy, TUIEventType event_type) {
+  struct TUIEventParams input = {dpy, event_type};
+  ByteStream input_params;
+  input_params.setToExternal(reinterpret_cast<uint8_t*>(&input), sizeof(struct TUIEventParams));
+  int32_t error = 0;
+  auto hidl_cb = [&error] (int32_t err, ByteStream params, HandleStream handles) {
+    error = err;
+  };
+
+  display_config_->perform(client_handle_, kSendTUIEvent, input_params, {}, hidl_cb);
+
+  return error;
+}
+
+int ClientImpl::GetDisplayHwId(uint32_t disp_id, uint32_t *display_hw_id) {
+  ByteStream input_params;
+  input_params.setToExternal(reinterpret_cast<uint8_t*>(&disp_id), sizeof(uint32_t));
+  ByteStream output_params;
+
+  int error = 0;
+  auto hidl_cb = [&error, &output_params] (int32_t err, ByteStream params, HandleStream handles) {
+    error = err;
+    output_params = params;
+  };
+
+  display_config_->perform(client_handle_, kGetDisplayHwId, input_params, {}, hidl_cb);
+
+  const uint8_t *data = output_params.data();
+  const uint32_t *output = reinterpret_cast<const uint32_t*>(data);
+
+  if (!error) {
+    *display_hw_id = *output;
+  }
+
+  return error;
+}
+
+void ClientCallback::ParseNotifyCWBBufferDone(const ByteStream &input_params,
+                                              const HandleStream &input_handles) {
   const int *error;
 
-  if (input_params.size() == 0 || input_handles.size() == 0) {
+  if (callback_ == nullptr || input_params.size() == 0 || input_handles.size() == 0) {
     return;
   }
 
@@ -834,10 +879,10 @@ void ClientImpl::ParseNotifyCWBBufferDone(const ByteStream &input_params,
   callback_->NotifyCWBBufferDone(*error, buffer.getNativeHandle());
 }
 
-void ClientImpl::ParseNotifyQsyncChange(const ByteStream &input_params) {
+void ClientCallback::ParseNotifyQsyncChange(const ByteStream &input_params) {
   const struct QsyncCallbackParams *qsync_data;
 
-  if (input_params.size() == 0) {
+  if (callback_ == nullptr || input_params.size() == 0) {
     return;
   }
 
@@ -847,8 +892,8 @@ void ClientImpl::ParseNotifyQsyncChange(const ByteStream &input_params) {
                                qsync_data->qsync_refresh_rate);
 }
 
-Return<void> ClientImpl::perform(uint32_t op_code, const ByteStream &input_params,
-                                 const HandleStream &input_handles) {
+Return<void> ClientCallback::perform(uint32_t op_code, const ByteStream &input_params,
+                                     const HandleStream &input_handles) {
   switch (op_code) {
     case kSetCwbOutputBuffer:
       ParseNotifyCWBBufferDone(input_params, input_handles);
