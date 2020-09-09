@@ -77,6 +77,8 @@ enum OpCode {
   kControlQsyncCallback = 41,
   kSendTUIEvent = 42,
   kGetDisplayHwId = 43,
+  kGetSupportedDisplayRefreshRates = 44,
+  kIsRCSupported = 45,
 
   kDestroy = 0xFFFF, // Destroy sequence execution
 };

@@ -75,7 +75,13 @@ Return<void> DeviceImpl::registerClient(const hidl_string &client_name,
     callback->linkToDeath(this, client_handle);
   }
   ConfigInterface *intf = nullptr;
-  intf_->RegisterClientContext(device_client, &intf);
+  error = intf_->RegisterClientContext(device_client, &intf);
+
+  if (error) {
+    callback->unlinkToDeath(this);
+    return Void();
+  }
+
   device_client->SetDeviceConfigIntf(intf);
 
   display_config_map_.emplace(std::make_pair(client_handle, device_client));
@@ -736,6 +742,41 @@ void DeviceImpl::DeviceClientContext::ParseGetDisplayHwId(const ByteStream &inpu
   _hidl_cb(error, output_params, {});
 }
 
+void DeviceImpl::DeviceClientContext::ParseGetSupportedDisplayRefreshRates(
+    const ByteStream &input_params, perform_cb _hidl_cb) {
+  ByteStream output_params;
+  std::vector<uint32_t> refresh_rates;
+
+  const uint8_t *data = input_params.data();
+  const DisplayType *dpy = reinterpret_cast<const DisplayType *>(data);
+  int32_t error = intf_->GetSupportedDisplayRefreshRates(*dpy, &refresh_rates);
+
+  uint32_t *refresh_rates_data =
+      reinterpret_cast<uint32_t *>(malloc(sizeof(uint32_t) * refresh_rates.size()));
+  if (refresh_rates_data) {
+    for (int i = 0; i < refresh_rates.size(); i++) {
+      refresh_rates_data[i] = refresh_rates[i];
+    }
+    output_params.setToExternal(reinterpret_cast<uint8_t *>(refresh_rates_data),
+                                sizeof(uint32_t) * refresh_rates.size());
+    _hidl_cb(error, output_params, {});
+  } else {
+    _hidl_cb(-EINVAL, {}, {});
+  }
+}
+
+void DeviceImpl::DeviceClientContext::ParseIsRCSupported(const ByteStream &input_params,
+                                                         perform_cb _hidl_cb) {
+  const uint8_t *data = input_params.data();
+  const uint32_t *disp_id = reinterpret_cast<const uint32_t*>(data);
+  bool supported = false;
+  int32_t error = intf_->IsRCSupported(*disp_id, &supported);
+  ByteStream output_params;
+  output_params.setToExternal(reinterpret_cast<uint8_t*>(&supported), sizeof(bool));
+
+  _hidl_cb(error, output_params, {});
+}
+
 Return<void> DeviceImpl::perform(uint64_t client_handle, uint32_t op_code,
                                  const ByteStream &input_params, const HandleStream &input_handles,
                                  perform_cb _hidl_cb) {
@@ -888,6 +929,12 @@ Return<void> DeviceImpl::perform(uint64_t client_handle, uint32_t op_code,
       break;
     case kGetDisplayHwId:
       client->ParseGetDisplayHwId(input_params, _hidl_cb);
+      break;
+    case kGetSupportedDisplayRefreshRates:
+      client->ParseGetSupportedDisplayRefreshRates(input_params, _hidl_cb);
+      break;
+    case kIsRCSupported:
+      client->ParseIsRCSupported(input_params, _hidl_cb);
       break;
     default:
       break;
