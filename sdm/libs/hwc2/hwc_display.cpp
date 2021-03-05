@@ -649,8 +649,30 @@ HWC2::Error HWCDisplay::DestroyLayer(hwc2_layer_t layer_id) {
   return HWC2::Error::None;
 }
 
+#ifdef FOD_ZPOS
+// From a HWC layer index, get the index that the layer will have
+// as a hardware layer
+int HWCDisplay::GetHWLayerIndex(int index) {
+    // Reduce the index by 2 if the client target is the GPU target
+    if (client_target_->GetSDMLayer()->composition == kCompositionGPUTarget)
+        index--;
+        if (!validated_)
+            index--;
+
+    if (validated_)
+        int i = 0;
+        for (auto hwc_layer : layer_set_)
+            Layer *layer = hwc_layer->GetSDMLayer();
+            if (layer->composition != kCompositionSDE && index > i)
+                index--;
+            i++;
+
+    return index;
+}
+#endif
 
 void HWCDisplay::BuildLayerStack() {
+  int i = 0;
   layer_stack_ = LayerStack();
   display_rect_ = LayerRect();
   metadata_refresh_rate_ = 0;
@@ -678,8 +700,10 @@ void HWCDisplay::BuildLayerStack() {
 #ifdef FOD_ZPOS
     if (hwc_layer->IsFodPressed()) {
       layer->flags.fod_pressed = true;
+      layer_stack_.fod_layer_index = GetHWLayerIndex(i);
     }
 #endif
+    i++;
 
     if (!hwc_layer->IsDataSpaceSupported()) {
       layer->flags.skip = true;
@@ -1311,6 +1335,7 @@ DisplayError HWCDisplay::HandleEvent(DisplayEvent event) {
 }
 
 HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out_num_requests) {
+  int i = 0;
   layer_changes_.clear();
   layer_requests_.clear();
   has_client_composition_ = false;
@@ -1380,6 +1405,13 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
       layer_changes_[hwc_layer->GetId()] = device_composition;
     }
     hwc_layer->ResetValidation();
+#ifdef FOD_ZPOS
+    if (hwc_layer->IsFodPressed()) {
+      layer_stack_.fod_layer_index = GetHWLayerIndex(i);
+      layer->flags.fod_pressed = true;
+    }
+#endif
+    i++;
   }
 
   if ((has_client_composition_) && (!has_force_client_composition_)) {
