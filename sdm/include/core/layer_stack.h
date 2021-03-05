@@ -461,6 +461,11 @@ struct LayerStack {
 
 
   PrimariesTransfer blend_cs = {};     //!< o/p - Blending color space of the frame, updated by SDM
+
+#ifdef FOD_ZPOS
+  int fod_layer_index = -1;            //!< Flag that specifies the FOD layer index.
+                                       //!< A negative number equals to no FOD layer existing
+#endif
 };
 
 }  // namespace sdm
