@@ -497,6 +497,9 @@ class HWCDisplay : public DisplayEventHandler {
   int release_fence_ = -1;
   hwc2_config_t pending_config_index_ = 0;
   int async_power_mode_ = 0;
+#ifdef FOD_ZPOS
+  int GetHWLayerIndex(int index);
+#endif
 };
 
 inline int HWCDisplay::Perform(uint32_t operation, ...) {
