@@ -649,8 +649,22 @@ HWC2::Error HWCDisplay::DestroyLayer(hwc2_layer_t layer_id) {
   return HWC2::Error::None;
 }
 
+#ifdef FOD_ZPOS
+// From a HWC layer index, get the index that the layer will have
+// as a hardware layer
+int HWCDisplay::GetHWLayerIndex(int index) {
+    // Reduce the index by 2 if the client target is the GPU target
+    if (client_target_->GetSDMLayer()->composition == kCompositionGPUTarget) {
+        index--;
+        index--;
+    }
+
+    return index;
+}
+#endif
 
 void HWCDisplay::BuildLayerStack() {
+  int i = 0;
   layer_stack_ = LayerStack();
   display_rect_ = LayerRect();
   metadata_refresh_rate_ = 0;
@@ -678,8 +692,10 @@ void HWCDisplay::BuildLayerStack() {
 #ifdef FOD_ZPOS
     if (hwc_layer->IsFodPressed()) {
       layer->flags.fod_pressed = true;
+      layer_stack_.fod_layer_index = GetHWLayerIndex(i);
     }
 #endif
+    i++;
 
     if (!hwc_layer->IsDataSpaceSupported()) {
       layer->flags.skip = true;
