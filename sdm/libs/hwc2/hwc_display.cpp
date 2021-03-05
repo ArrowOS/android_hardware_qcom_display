@@ -649,6 +649,18 @@ HWC2::Error HWCDisplay::DestroyLayer(hwc2_layer_t layer_id) {
   return HWC2::Error::None;
 }
 
+int HWCDisplay::GetHWLayerIdx(int idx) {
+    int i = 0;
+    for (auto hwc_layer : layer_set_) {
+        Layer *layer = hwc_layer->GetSDMLayer();
+        if (layer->composition != kCompositionSDE && idx >= i) {
+            idx--;
+        }
+        i++;
+    }
+
+    return idx;
+}
 
 void HWCDisplay::BuildLayerStack() {
   layer_stack_ = LayerStack();
@@ -657,6 +669,7 @@ void HWCDisplay::BuildLayerStack() {
   bool has_valid_client_layer = false;
   layer_stack_.flags.animating = animating_;
   layer_stack_.flags.fast_path = fast_path_enabled_ && fast_path_composition_;
+  int i = 0;
 
   DTRACE_SCOPED();
   // Add one layer for fb target
@@ -677,7 +690,7 @@ void HWCDisplay::BuildLayerStack() {
 
 #ifdef FOD_ZPOS
     if (hwc_layer->IsFodPressed()) {
-      layer->flags.fod_pressed = true;
+      layer_stack_.fod_layer_idx = GetHWLayerIdx(i);
     }
 #endif
 
@@ -793,6 +806,7 @@ void HWCDisplay::BuildLayerStack() {
     layer_stack_.flags.mask_present |= layer->input_buffer.flags.mask_layer;
 
     layer_stack_.layers.push_back(layer);
+    i++;
   }
 
   // If all client layers are invalid, skip all layers
