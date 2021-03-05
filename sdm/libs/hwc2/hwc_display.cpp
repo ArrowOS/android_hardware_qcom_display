@@ -649,6 +649,25 @@ HWC2::Error HWCDisplay::DestroyLayer(hwc2_layer_t layer_id) {
   return HWC2::Error::None;
 }
 
+int HWCDisplay::GetHWLayerIndex(int index) {
+    int i = 0;
+
+    // Set a lower index if the client target is the GPU target
+    if (client_target_->GetSDMLayer()->composition == kCompositionGPUTarget) {
+        index--;
+    }
+
+    for (auto hwc_layer : layer_set_) {
+        Layer *layer = hwc_layer->GetSDMLayer();
+        // Set a lower index if there are non-hw layers below the layer
+        if (layer->composition != kCompositionSDE && index > i) {
+            index--;
+        }
+        i++;
+    }
+
+    return index;
+}
 
 void HWCDisplay::BuildLayerStack() {
   layer_stack_ = LayerStack();
@@ -674,12 +693,6 @@ void HWCDisplay::BuildLayerStack() {
     } else if (hwc_layer->GetClientRequestedCompositionType() == HWC2::Composition::SolidColor) {
       layer->flags.solid_fill = true;
     }
-
-#ifdef FOD_ZPOS
-    if (hwc_layer->IsFodPressed()) {
-      layer->flags.fod_pressed = true;
-    }
-#endif
 
     if (!hwc_layer->IsDataSpaceSupported()) {
       layer->flags.skip = true;
@@ -1311,6 +1324,7 @@ DisplayError HWCDisplay::HandleEvent(DisplayEvent event) {
 }
 
 HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out_num_requests) {
+  int i = 0;
   layer_changes_.clear();
   layer_requests_.clear();
   has_client_composition_ = false;
@@ -1380,6 +1394,12 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
       layer_changes_[hwc_layer->GetId()] = device_composition;
     }
     hwc_layer->ResetValidation();
+#ifdef FOD_ZPOS
+    if (hwc_layer->IsFodPressed()) {
+      layer_stack_.fod_layer_index = GetHWLayerIndex(i);
+    }
+#endif
+    i++;
   }
 
   if ((has_client_composition_) && (!has_force_client_composition_)) {
