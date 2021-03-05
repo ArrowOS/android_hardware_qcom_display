@@ -1111,6 +1111,9 @@ void HWDeviceDRM::SetupAtomic(HWLayers *hw_layers, bool validate) {
   uint32_t index = current_mode_index_;
   drmModeModeInfo current_mode = connector_info_.modes[index].mode;
   uint64_t current_bit_clk = connector_info_.modes[index].bit_clk_rate;
+#ifdef FOD_ZPOS
+  bool fod_pressed_flag_present = false;
+#endif
 
   solid_fills_.clear();
   bool resource_update = hw_layers->updates_mask.test(kUpdateResources);
@@ -1146,6 +1149,15 @@ void HWDeviceDRM::SetupAtomic(HWLayers *hw_layers, bool validate) {
                               num_rects, conn_rects);
   }
 
+#ifdef FOD_PRESSED
+  for (uint32_t i = 0; i < hw_layer_count; i++) {
+    Layer &layer = hw_layer_info.hw_layers.at(i);
+      if (layer.flags.fod_pressed) {
+        fod_pressed_flag_present = true;
+      }
+  }
+#endif
+
   for (uint32_t i = 0; i < hw_layer_count; i++) {
     Layer &layer = hw_layer_info.hw_layers.at(i);
     LayerBuffer *input_buffer = &layer.input_buffer;
@@ -1177,9 +1189,11 @@ void HWDeviceDRM::SetupAtomic(HWLayers *hw_layers, bool validate) {
 
 #ifdef FOD_ZPOS
           uint32_t z_order = pipe_info->z_order;
-          if (layer.flags.fod_pressed) {
+          if (layer.flags.fod_pressed ||
+            (!fod_pressed_flag_present && hw_layer_info.stack->fod_layer_index == i)) {
             z_order |= FOD_PRESSED_LAYER_ZORDER;
           }
+
           drm_atomic_intf_->Perform(DRMOps::PLANE_SET_ZORDER, pipe_id, z_order);
 #else
           drm_atomic_intf_->Perform(DRMOps::PLANE_SET_ZORDER, pipe_id, pipe_info->z_order);
