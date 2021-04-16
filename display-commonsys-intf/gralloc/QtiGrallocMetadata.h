@@ -63,7 +63,7 @@
 #define QTI_CUSTOM_DIMENSIONS_HEIGHT 10022
 #define QTI_RGB_DATA_ADDRESS 10023
 #define QTI_COLORSPACE 10024
-#define QTI_YUV_PLANE_INFO 10025
+//#define QTI_YUV_PLANE_INFO 10025
 
 // Used to indicate to framework that internal definitions are used instead
 #define COMPRESSION_QTI_UBWC 20001
