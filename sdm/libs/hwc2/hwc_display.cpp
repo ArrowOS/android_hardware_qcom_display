@@ -649,27 +649,6 @@ HWC2::Error HWCDisplay::DestroyLayer(hwc2_layer_t layer_id) {
   return HWC2::Error::None;
 }
 
-#ifdef FOD_ZPOS
-// From a HWC layer index, get the index that the layer will have
-// as a hardware layer
-int HWCDisplay::GetHWLayerIndex(int index) {
-    int i = 0;
-
-    if (client_target_->GetSDMLayer()->composition == kCompositionGPUTarget) {
-        index--;
-    }
-
-    for (auto hwc_layer : layer_set_) {
-        Layer *layer = hwc_layer->GetSDMLayer();
-        if (layer->composition != kCompositionSDE && index > i) {
-            index--;
-        }
-        i++;
-    }
-
-    return index;
-}
-#endif
 
 void HWCDisplay::BuildLayerStack() {
   layer_stack_ = LayerStack();
@@ -678,9 +657,6 @@ void HWCDisplay::BuildLayerStack() {
   bool has_valid_client_layer = false;
   layer_stack_.flags.animating = animating_;
   layer_stack_.flags.fast_path = fast_path_enabled_ && fast_path_composition_;
-#ifdef FOD_ZPOS
-  bool fod_layer_present = false;
-#endif
 
   DTRACE_SCOPED();
   // Add one layer for fb target
@@ -702,8 +678,6 @@ void HWCDisplay::BuildLayerStack() {
 #ifdef FOD_ZPOS
     if (hwc_layer->IsFodPressed()) {
       layer->flags.fod_pressed = true;
-      layer_stack_.fod_layer_index = last_fod_layer_index;
-      fod_layer_present = true;
     }
 #endif
 
@@ -820,12 +794,6 @@ void HWCDisplay::BuildLayerStack() {
 
     layer_stack_.layers.push_back(layer);
   }
-
-#ifdef FOD_ZPOS
-  if (!fod_layer_present) {
-    last_fod_layer_index = -1;
-  }
-#endif
 
   // If all client layers are invalid, skip all layers
   if (layer_stack_.flags.skip_present && !has_valid_client_layer) {
@@ -1343,9 +1311,6 @@ DisplayError HWCDisplay::HandleEvent(DisplayEvent event) {
 }
 
 HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out_num_requests) {
-#ifdef FOD_ZPOS
-  int i = 0;
-#endif
   layer_changes_.clear();
   layer_requests_.clear();
   has_client_composition_ = false;
@@ -1415,12 +1380,6 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
       layer_changes_[hwc_layer->GetId()] = device_composition;
     }
     hwc_layer->ResetValidation();
-#ifdef FOD_ZPOS
-    if (hwc_layer->IsFodPressed()) {
-      last_fod_layer_index = GetHWLayerIndex(i);
-    }
-    i++;
-#endif
   }
 
   if ((has_client_composition_) && (!has_force_client_composition_)) {

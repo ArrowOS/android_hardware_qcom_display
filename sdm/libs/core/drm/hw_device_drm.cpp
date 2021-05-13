@@ -1111,10 +1111,6 @@ void HWDeviceDRM::SetupAtomic(HWLayers *hw_layers, bool validate) {
   uint32_t index = current_mode_index_;
   drmModeModeInfo current_mode = connector_info_.modes[index].mode;
   uint64_t current_bit_clk = connector_info_.modes[index].bit_clk_rate;
-#ifdef FOD_ZPOS
-  int use_fod_layer_index;
-  Debug::GetProperty("debug.hwc.use_fod_index", &use_fod_layer_index);
-#endif
 
   solid_fills_.clear();
   bool resource_update = hw_layers->updates_mask.test(kUpdateResources);
@@ -1181,8 +1177,7 @@ void HWDeviceDRM::SetupAtomic(HWLayers *hw_layers, bool validate) {
 
 #ifdef FOD_ZPOS
           uint32_t z_order = pipe_info->z_order;
-          if (layer.flags.fod_pressed ||
-            (hw_layer_info.stack->fod_layer_index == i && (use_fod_layer_index == 1))) {
+          if (layer.flags.fod_pressed) {
             z_order |= FOD_PRESSED_LAYER_ZORDER;
           }
           drm_atomic_intf_->Perform(DRMOps::PLANE_SET_ZORDER, pipe_id, z_order);
