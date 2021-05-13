@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014-2021, The Linux Foundation. All rights reserved.
  * Not a Contribution.
  *
  * Copyright 2015 The Android Open Source Project
@@ -53,7 +53,6 @@
 namespace sdm {
 
 uint32_t HWCDisplay::throttling_refresh_rate_ = 60;
-constexpr uint32_t kVsyncTimeDriftNs = 1000000;
 
 bool NeedsToneMap(const LayerStack &layer_stack) {
   for (Layer *layer : layer_stack.layers) {
@@ -65,7 +64,7 @@ bool NeedsToneMap(const LayerStack &layer_stack) {
 }
 
 bool IsTimeAfterOrEqualVsyncTime(int64_t time, int64_t vsync_time) {
-  return ((vsync_time != INT64_MAX) && ((time - (vsync_time - kVsyncTimeDriftNs)) >= 0));
+  return ((vsync_time != INT64_MAX) && ((time - vsync_time) >= 0));
 }
 
 HWCColorMode::HWCColorMode(DisplayInterface *display_intf) : display_intf_(display_intf) {}
@@ -721,6 +720,10 @@ void HWCDisplay::BuildLayerStack() {
       is_secure = true;
     }
 
+    if (IS_RGB_FORMAT(layer->input_buffer.format) && hwc_layer->IsScalingPresent()) {
+      layer_stack_.flags.scaling_rgb_layer_present = true;
+    }
+
     if (hwc_layer->IsSingleBuffered() &&
        !(hwc_layer->IsRotationPresent() || hwc_layer->IsScalingPresent())) {
       layer->flags.single_buffer = true;
@@ -736,8 +739,14 @@ void HWCDisplay::BuildLayerStack() {
       layer_stack_.flags.hdr_present = true;
     }
 
+    if (game_supported_ && (hwc_layer->GetType() == kLayerGame)) {
+      layer->flags.is_game = true;
+      layer->input_buffer.flags.game = true;
+    }
+
     if (hwc_layer->IsNonIntegralSourceCrop() && !is_secure && !hdr_layer &&
-        !layer->flags.single_buffer && !layer->flags.solid_fill && !is_video) {
+        !layer->flags.single_buffer && !layer->flags.solid_fill && !is_video &&
+        !layer->flags.is_game) {
       layer->flags.skip = true;
     }
 
@@ -797,11 +806,6 @@ void HWCDisplay::BuildLayerStack() {
         (hwc_layer->GetClientRequestedCompositionType() != HWC2::Composition::Device) ||
         layer->flags.skip) {
       layer->update_mask.set(kClientCompRequest);
-    }
-
-    if (game_supported_ && (hwc_layer->GetType() == kLayerGame)) {
-      layer->flags.is_game = true;
-      layer->input_buffer.flags.game = true;
     }
 
     layer_stack_.layers.push_back(layer);
@@ -1226,6 +1230,20 @@ HWC2::Error HWCDisplay::SetClientTarget(buffer_handle_t target, shared_ptr<Fence
     return HWC2::Error::BadParameter;
   }
   client_target_->SetLayerBuffer(target, acquire_fence);
+  client_target_handle_ = target;
+  client_acquire_fence_ = acquire_fence;
+  client_dataspace_     = dataspace;
+  client_damage_region_ = damage;
+
+  return HWC2::Error::None;
+}
+
+HWC2::Error HWCDisplay::GetClientTarget(buffer_handle_t target, shared_ptr<Fence> acquire_fence,
+                                        int32_t dataspace, hwc_region_t damage) {
+  target        = client_target_handle_;
+  acquire_fence = client_acquire_fence_;
+  dataspace     = client_dataspace_;
+  damage        = client_damage_region_;
 
   return HWC2::Error::None;
 }
@@ -1365,6 +1383,9 @@ DisplayError HWCDisplay::HandleEvent(DisplayEvent event) {
     case kInvalidateDisplay:
       validated_ = false;
       break;
+    case kPostIdleTimeout:
+      display_idle_ = true;
+      break;
     default:
       DLOGW("Unknown event: %d", event);
       break;
@@ -1381,6 +1402,7 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
   layer_changes_.clear();
   layer_requests_.clear();
   has_client_composition_ = false;
+  display_idle_ = false;
 
   DTRACE_SCOPED();
   if (shutdown_pending_) {
