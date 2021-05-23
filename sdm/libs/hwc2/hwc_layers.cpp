@@ -548,6 +548,10 @@ HWC2::Error HWCLayer::SetLayerZOrder(uint32_t z) {
       fod_pressed_ = true;
       z &= ~FOD_PRESSED_LAYER_ZORDER;
     }
+    if (z & FOD_ICON_LAYER_ZORDER) {
+      fod_icon_ = true;
+      z &= ~FOD_ICON_LAYER_ZORDER;
+    }
 #endif
 
     geometry_changes_ |= kZOrder;

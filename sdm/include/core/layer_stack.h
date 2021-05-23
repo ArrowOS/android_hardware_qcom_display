@@ -193,10 +193,13 @@ struct LayerFlags {
                                    //!< uses only a single buffer that will not be swapped out
 
 #ifdef FOD_ZPOS
-      uint32_t reserved : 26;      //!< This flag reserves the remaining 4 * 8 - (5 + 1) bits to
+      uint32_t reserved : 25;      //!< This flag reserves the remaining 4 * 8 - (5 + 2) bits to
                                    //!< avoid future ABI breakage
 
       uint32_t fod_pressed : 1;    //!< This flag shall be set internally to mark the fod pressed
+                                   //!< layer
+
+      uint32_t fod_icon : 1;       //!< This flag shall be set internally to mark the fod icon
                                    //!< layer
 #endif
     };

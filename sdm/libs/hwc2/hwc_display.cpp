@@ -679,6 +679,9 @@ void HWCDisplay::BuildLayerStack() {
     if (hwc_layer->IsFodPressed()) {
       layer->flags.fod_pressed = true;
     }
+    if (hwc_layer->IsFodIcon()) {
+        layer->flags.fod_icon = true;
+    }
 #endif
 
     if (!hwc_layer->IsDataSpaceSupported()) {

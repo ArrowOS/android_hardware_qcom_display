@@ -1180,6 +1180,9 @@ void HWDeviceDRM::SetupAtomic(HWLayers *hw_layers, bool validate) {
           if (layer.flags.fod_pressed) {
             z_order |= FOD_PRESSED_LAYER_ZORDER;
           }
+          if (layer.flags.fod_icon) {
+            z_order |= FOD_ICON_LAYER_ZORDER;
+          }
           drm_atomic_intf_->Perform(DRMOps::PLANE_SET_ZORDER, pipe_id, z_order);
 #else
           drm_atomic_intf_->Perform(DRMOps::PLANE_SET_ZORDER, pipe_id, pipe_info->z_order);

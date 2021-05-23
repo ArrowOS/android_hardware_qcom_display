@@ -121,6 +121,7 @@ class HWCLayer {
   void ResetBufferFlip() { buffer_flipped_ = false; }
 #ifdef FOD_ZPOS
   bool IsFodPressed() { return fod_pressed_; }
+  bool IsFodIcon() { return fod_icon_; }
 #endif
 
  private:
@@ -144,6 +145,7 @@ class HWCLayer {
   bool buffer_flipped_ = false;
 #ifdef FOD_ZPOS
   bool fod_pressed_ = false;
+  bool fod_icon_ = false;
 #endif
 
   // Composition requested by client(SF) Original
