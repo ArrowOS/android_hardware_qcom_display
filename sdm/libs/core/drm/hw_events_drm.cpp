@@ -607,6 +607,13 @@ void HWEventsDRM::HandleIdleTimeout(char *data) {
     switch (event_resp->base.type) {
       case DRM_EVENT_IDLE_NOTIFY:
       {
+        int value = 0;
+        if (Debug::Get()->GetProperty(DISABLE_IDLE_TIMEOUT, &value) == kErrorNone) {
+            if (value == 1) {
+                DLOGV("Skipped idle timeout event");
+                break;
+            }
+        }
         DLOGV("Received Idle time event");
         event_handler_->IdleTimeout();
         break;
