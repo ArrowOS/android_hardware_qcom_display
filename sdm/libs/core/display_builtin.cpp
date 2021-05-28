@@ -119,6 +119,9 @@ DisplayError DisplayBuiltIn::Init() {
   Debug::Get()->GetProperty(DEFER_FPS_FRAME_COUNT, &value);
   deferred_config_.frame_count = (value > 0) ? UINT32(value) : 0;
 
+  Debug::Get()->GetProperty(DISABLE_IDLE_TIMEOUT, &value);
+  disable_idle_timeout_ = (value == 1);
+
   return error;
 }
 
@@ -279,6 +282,9 @@ DisplayError DisplayBuiltIn::Commit(LayerStack *layer_stack) {
 void DisplayBuiltIn::UpdateDisplayModeParams() {
   if (hw_panel_info_.mode == kModeVideo) {
     uint32_t pending = 0;
+    if (disable_idle_timeout_) {
+        comp_manager_->SetIdleTimeoutMs(display_comp_ctx_, 0);
+    }
     ControlPartialUpdate(false /* enable */, &pending);
   } else if (hw_panel_info_.mode == kModeCommand) {
     // Flush idle timeout value currently set.

@@ -107,6 +107,7 @@ class HWEventsDRM : public HWEventsInterface {
   uint32_t idle_pc_index_ = UINT32_MAX;
   bool disable_hw_recovery_ = false;
   uint32_t hw_recovery_index_ = UINT32_MAX;
+  bool disable_idle_timeout_ = false;
 };
 
 }  // namespace sdm
