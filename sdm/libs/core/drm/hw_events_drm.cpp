@@ -235,6 +235,10 @@ DisplayError HWEventsDRM::Init(int display_id, DisplayType display_type,
     RegisterHwRecovery(true);
   }
 
+  if (Debug::Get()->GetProperty(DISABLE_IDLE_TIMEOUT, &value) == kErrorNone) {
+    disable_idle_timeout_ = (value == 1);
+  }
+
   return kErrorNone;
 }
 
@@ -586,7 +590,7 @@ void HWEventsDRM::HandleIdleTimeout(char *data) {
   struct drm_msm_event_resp *event_resp = NULL;
 
   size = (int32_t)Sys::pread_(poll_fds_[idle_notify_index_].fd, event_data, kMaxStringLength, 0);
-  if (size < 0) {
+  if (size < 0 || disable_idle_timeout_) {
     return;
   }
 
