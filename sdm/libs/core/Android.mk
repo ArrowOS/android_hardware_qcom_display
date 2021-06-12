@@ -30,6 +30,11 @@ ifeq ($(TARGET_USES_FOD_ZPOS), true)
     LOCAL_CFLAGS              += -DFOD_ZPOS
 endif
 
+TARGET_PANEL_DIMENSION_MULTIPLIER ?= 1
+ifneq ($(TARGET_PANEL_DIMENSION_MULTIPLIER),)
+    LOCAL_CFLAGS              += -DPANEL_DIMENSION_MULTIPLIER=$(TARGET_PANEL_DIMENSION_MULTIPLIER)
+endif
+
 LOCAL_ADDITIONAL_DEPENDENCIES := $(common_deps)
 LOCAL_SRC_FILES               := core_interface.cpp \
                                  core_impl.cpp \
