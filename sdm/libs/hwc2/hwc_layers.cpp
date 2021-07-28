@@ -1063,6 +1063,7 @@ void HWCLayer::SetComposition(const LayerComposition &sdm_composition) {
   if (sdm_composition == kCompositionSDE && layer_->flags.solid_fill != 0) {
     hwc_composition = HWC2::Composition::SolidColor;
   }
+
   device_selected_ = hwc_composition;
 
   return;
