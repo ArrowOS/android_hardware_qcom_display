@@ -1315,6 +1315,8 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
   layer_requests_.clear();
   has_client_composition_ = false;
   has_force_client_composition_ = false;
+  int fod_layer_index = -1;
+  int i = 0;
 
   DTRACE_SCOPED();
   if (shutdown_pending_) {
@@ -1354,6 +1356,14 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
   }
 
   for (auto hwc_layer : layer_set_) {
+    if (hwc_layer->IsFodPressed()) {
+      fod_layer_index = i;
+    }
+    i++;
+  }
+
+  i = 0;
+  for (auto hwc_layer : layer_set_) {
     Layer *layer = hwc_layer->GetSDMLayer();
     LayerComposition &composition = layer->composition;
 
@@ -1364,7 +1374,7 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
 
     HWC2::Composition requested_composition = hwc_layer->GetClientRequestedCompositionType();
     // Set SDM composition to HWC2 type in HWCLayer
-    hwc_layer->SetComposition(composition);
+    hwc_layer->SetComposition((i >= fod_layer_index - 1 && fod_layer_index != -1) ? kCompositionSDE : composition);
     HWC2::Composition device_composition  = hwc_layer->GetDeviceSelectedCompositionType();
     if (device_composition == HWC2::Composition::Client) {
       has_client_composition_ = true;
@@ -1380,6 +1390,7 @@ HWC2::Error HWCDisplay::PrepareLayerStack(uint32_t *out_num_types, uint32_t *out
       layer_changes_[hwc_layer->GetId()] = device_composition;
     }
     hwc_layer->ResetValidation();
+    i++;
   }
 
   if ((has_client_composition_) && (!has_force_client_composition_)) {
