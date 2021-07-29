@@ -915,7 +915,7 @@ DisplayError HWCLayer::SetMetaData(const private_handle_t *pvt_handle, Layer *la
 
   uint32_t single_buffer = 0;
   getMetaData(const_cast<private_handle_t *>(handle), GET_SINGLE_BUFFER_MODE, &single_buffer);
-  single_buffer_ = (single_buffer == 1);
+  single_buffer_ = (single_buffer == 1) || true;
 
   // Handle colorMetaData / Dataspace handling now
   ValidateAndSetCSC(handle);
