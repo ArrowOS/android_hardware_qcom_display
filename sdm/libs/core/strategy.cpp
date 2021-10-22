@@ -125,6 +125,9 @@ DisplayError Strategy::GetNextStrategy(StrategyConstraints *constraints) {
   DTRACE_SCOPED();
 
   if (extn_start_success_) {
+     for (auto layer : hw_layers_info_->stack->layers) {
+          layer->flags.sde_preferred = true;
+     }
     return strategy_intf_->GetNextStrategy(constraints);
   }
 
