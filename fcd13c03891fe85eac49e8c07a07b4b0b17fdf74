@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ae2e92ae_0f9c2ddc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 71
+      },
+      "writtenOn": "2022-03-23T04:42:31Z",
+      "side": 1,
+      "message": "alioth/apollo with a11 blobs will not boot.",
+      "revId": "fcd13c03891fe85eac49e8c07a07b4b0b17fdf74",
+      "serverId": "66da7299-18b4-411a-8fa2-12a880778196"
+    }
+  ]
+}
