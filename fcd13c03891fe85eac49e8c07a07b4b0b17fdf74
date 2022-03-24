@@ -16,6 +16,24 @@
       "message": "alioth/apollo with a11 blobs will not boot.",
       "revId": "fcd13c03891fe85eac49e8c07a07b4b0b17fdf74",
       "serverId": "66da7299-18b4-411a-8fa2-12a880778196"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "36b113c6_09dc8705",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 340
+      },
+      "writtenOn": "2022-03-24T06:59:51Z",
+      "side": 1,
+      "message": "Blobs need to update to MIUI13(A12).\nAnd vendor based on MIUI13(A12) won\u0027t boot when display hals are lower than this tag.",
+      "parentUuid": "ae2e92ae_0f9c2ddc",
+      "revId": "fcd13c03891fe85eac49e8c07a07b4b0b17fdf74",
+      "serverId": "66da7299-18b4-411a-8fa2-12a880778196"
     }
   ]
 }
