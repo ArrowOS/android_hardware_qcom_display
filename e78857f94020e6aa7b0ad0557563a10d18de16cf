@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f6e8aa61_1189afd8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 71
+      },
+      "writtenOn": "2022-08-23T16:18:55Z",
+      "side": 1,
+      "message": "Request kernel commit:\nhttps://github.com/ArrowOS-Devices/android_kernel_xiaomi_alioth/commit/158d0f19d38710f256a4a3e41235d46cdf473276",
+      "revId": "e78857f94020e6aa7b0ad0557563a10d18de16cf",
+      "serverId": "66da7299-18b4-411a-8fa2-12a880778196"
+    }
+  ]
+}
